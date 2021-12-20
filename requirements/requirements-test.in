@@ -1,0 +1,30 @@
+# linting
+flake8
+flake8-comprehensions
+flake8-debugger
+flake8-isort
+flake8-print
+flake8-tuple
+isort
+pylint
+
+# code formatting
+black
+
+# type checking
+mypy
+types-setuptools
+types-toml
+
+# testing
+pytest
+tox
+pytest-cov
+codecov
+
+# package building
+docutils
+Pygments>=2.2.0
+twine>=1.11.0
+wheel>=0.31.0
+readme_renderer[md]
