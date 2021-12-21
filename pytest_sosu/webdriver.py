@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import enum
-import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 import selenium  # type: ignore
 import selenium.webdriver  # type: ignore
+import selenium.webdriver.common.by  # type: ignore
+import structlog
+from selenium.webdriver import Remote as WebDriver
+from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu import settings
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 REGION_MAP = {
     "us": "us-west-1",
@@ -22,7 +26,7 @@ REGION_MAP = {
 }
 
 
-class TestResultsVisibility(enum.Enum):
+class SauceTestResultsVisibility(enum.Enum):
     PUBLIC = "public"
     PUBLIC_RESTRICTED = "public restricted"
     SHARE = "share"
@@ -31,7 +35,7 @@ class TestResultsVisibility(enum.Enum):
 
 
 @dataclass(frozen=True)
-class WDUrlData:
+class WebDriverUrlData:
     host: str
     port: Optional[int] = None
     scheme: str = "https"
@@ -40,7 +44,7 @@ class WDUrlData:
     path: str = "/wd/hub"
 
     @classmethod
-    def from_url(cls, url: str) -> WDUrlData:
+    def from_url(cls, url: str) -> WebDriverUrlData:
         result = urlparse(url)
         if ":" in result.netloc:
             host, port_str = result.netloc.rsplit(":", 1)
@@ -89,7 +93,7 @@ class WDUrlData:
             auth_prefix = f"{self.username}:{access_key}@"
         return f"{self.scheme}://{auth_prefix}{self.address}{self.path}"  # noqa: E501
 
-    def with_credentials(self, username, access_key) -> WDUrlData:
+    def with_credentials(self, username, access_key) -> WebDriverUrlData:
         return self.__class__(
             host=self.host,
             port=self.port,
@@ -100,15 +104,15 @@ class WDUrlData:
         )
 
 
-class WDTestMarkerException(Exception):
+class WebDriverTestMarkerException(Exception):
     pass
 
 
-class WDTestFailed(WDTestMarkerException):
+class WebDriverTestFailed(WebDriverTestMarkerException):
     pass
 
 
-class WDTestInterrupted(WDTestMarkerException):
+class WebDriverTestInterrupted(WebDriverTestMarkerException):
     pass
 
 
@@ -123,6 +127,12 @@ class Browser:
 
     def __str__(self) -> str:
         return f"{self.name} {self.version}"
+
+    def __structlog__(self) -> Dict[str, Any]:
+        return self.to_dict()
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dataclasses.asdict(self)
 
 
 @dataclass(frozen=True)
@@ -147,6 +157,12 @@ class Platform:
     def __str__(self) -> str:
         return self.full_name
 
+    def __structlog__(self) -> Dict[str, Any]:
+        return self.to_dict()
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dataclasses.asdict(self)
+
 
 @dataclass(frozen=True)
 class SauceOptions:
@@ -155,11 +171,14 @@ class SauceOptions:
     max_duration: int = 1800
     idle_timeout: int = 90
     command_timeout: int = 300
-    visibility: Optional[TestResultsVisibility] = None
+    visibility: Optional[SauceTestResultsVisibility] = None
 
     @classmethod
     def default(cls) -> SauceOptions:
         return cls()
+
+    def __structlog__(self):
+        return self.to_dict()
 
     def to_dict(self) -> Dict[str, Union[str, int, float]]:
         data = {
@@ -181,6 +200,9 @@ class Capabilities:
     browser: Optional[Browser] = Browser.default()
     platform: Optional[Platform] = Platform.default()
     sauce_options: SauceOptions = SauceOptions.default()
+
+    def __structlog__(self):
+        return self.to_dict()
 
     def to_dict(self, w3c: bool = True) -> Dict[str, Any]:
         data: Dict[str, Any] = {}
@@ -224,51 +246,74 @@ class Capabilities:
         return data
 
 
+@dataclass(frozen=True)
+class CapabilitiesMatrix:
+    browsers: Optional[List[Browser]] = None
+    platforms: Optional[List[Platform]] = Platform.default()
+    sauce_options: SauceOptions = SauceOptions.default()
+
+
 @contextlib.contextmanager
 def remote_webdriver_ctx(
-    url_data: WDUrlData,
+    url_data: WebDriverUrlData,
     capabilities: Capabilities,
     quit_on_finish: bool = True,
     mark_result_on_finish: bool = True,
     setup_timeouts: bool = True,
 ):
-    logger.debug("Driver starting with caps %s...", capabilities)
+    wd_safe_url = url_data.to_safe_url()
+    logger.debug("Driver starting", capabilities=capabilities, wd_url=wd_safe_url)
     driver = create_remote_webdriver(
         url_data, capabilities, setup_timeouts=setup_timeouts
     )
-    logger.debug("Driver %r started", driver)
-    logger.info("Session %s started", driver.session_id)
+    session_id = driver.session_id
+    logger.debug(
+        "Driver started",
+        capabilities=capabilities,
+        wd_url=wd_safe_url,
+        driver=driver,
+    )
+    logger.info("Session started", wd_url=wd_safe_url, session_id=session_id)
     job_result: Optional[str] = "failed"
     try:
         yield driver
         job_result = "passed"
-    except WDTestFailed:
+    except WebDriverTestFailed:
         pass
-    except (WDTestInterrupted, KeyboardInterrupt):
+    except (WebDriverTestInterrupted, KeyboardInterrupt):
         job_result = None
     finally:
         if mark_result_on_finish:
             if job_result is not None:
-                logger.debug("Marking test as %s...", job_result)
+                logger.debug(
+                    "Marking test",
+                    session_id=session_id,
+                    job_result=job_result,
+                )
                 driver.execute_script(f"sauce:job-result={job_result}")
             else:
-                logger.debug("Not marking test as it was interrupted")
+                logger.debug(
+                    "Not marking test as it was interrupted",
+                    session_id=session_id,
+                )
         if quit_on_finish:
-            logger.debug("Driver %r quitting...", driver)
+            logger.debug("Driver quitting", driver=driver)
             driver.quit()
-            logger.debug("Driver %r quitted", driver)
-        logger.info("Session %s stopped", driver.session_id)
+            logger.debug("Driver quitted", driver=driver)
+        logger.info("Session stopped", session_id=session_id)
 
 
 def create_remote_webdriver(
-    url_data: WDUrlData, capabilities: Capabilities, setup_timeouts: bool = True
-) -> selenium.webdriver.Remote:
-    url = url_data.to_url()
+    wd_url_data: WebDriverUrlData,
+    capabilities: Capabilities,
+    setup_timeouts: bool = True,
+) -> WebDriver:
+    wd_url = wd_url_data.to_url()
     caps = capabilities.to_dict()
-    safe_url = url_data.to_safe_url()
-    logger.info("Using webdriver URL: %s", safe_url)
-    driver = selenium.webdriver.Remote(
-        command_executor=url,
+    wd_safe_url = wd_url_data.to_safe_url()
+    logger.debug("Using webdriver URL", wd_url=wd_safe_url)
+    driver = WebDriver(
+        command_executor=wd_url,
         desired_capabilities=caps,
     )
     if setup_timeouts:
@@ -279,25 +324,25 @@ def create_remote_webdriver(
     return driver
 
 
-def get_remote_webdriver_url_data() -> WDUrlData:
+def get_remote_webdriver_url_data() -> WebDriverUrlData:
     if settings.SAUCE_WEBDRIVER_URL:
-        url_data = WDUrlData.from_url(settings.SAUCE_WEBDRIVER_URL)
+        wd_url_data = WebDriverUrlData.from_url(settings.SAUCE_WEBDRIVER_URL)
     else:
         if settings.SAUCE_WEBDRIVER_HOST:
             host = settings.SAUCE_WEBDRIVER_HOST
         else:
             host = get_host_by_region(settings.SAUCE_REGION)
-        url_data = WDUrlData(
+        wd_url_data = WebDriverUrlData(
             host=host,
             port=settings.SAUCE_WEBDRIVER_PORT,
             scheme=settings.SAUCE_WEBDRIVER_SCHEME,
             path=settings.SAUCE_WEBDRIVER_PATH,
         )
-    if not url_data.has_credentials:
-        url_data = url_data.with_credentials(
+    if not wd_url_data.has_credentials:
+        wd_url_data = wd_url_data.with_credentials(
             settings.SAUCE_USERNAME, settings.SAUCE_ACCESS_KEY
         )
-    return url_data
+    return wd_url_data
 
 
 def get_host_by_region(region: str) -> str:

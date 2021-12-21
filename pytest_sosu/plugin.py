@@ -1,47 +1,48 @@
 # pylint: disable=redefined-outer-name
 import datetime
-import logging
 from typing import Optional
 
 import pytest
+import structlog
 
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
     Platform,
     SauceOptions,
-    WDTestFailed,
-    WDTestInterrupted,
-    WDUrlData,
+    WebDriverTestFailed,
+    WebDriverTestInterrupted,
+    WebDriverUrlData,
     get_remote_webdriver_url_data,
     remote_webdriver_ctx,
 )
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def pytest_configure(config):
-    logger.debug("pytest_runtest_setup %s", config)
+    logger.debug("pytest_runtest_setup", config=config)
     # register an additional marker
     config.addinivalue_line("markers", "sosu(type): mark test to run with Sauce Labs")
 
 
 def pytest_runtest_setup(item):
-    logger.debug("pytest_runtest_setup %s", item)
+    logger.debug("pytest_runtest_setup", item=item)
     sosu_markers = list(item.iter_markers(name="sosu"))
     if sosu_markers:
-        logger.info("sosu marker(s) found %s", sosu_markers)
+        logger.debug("sosu marker(s) found", sosu_markers=sosu_markers)
 
 
 def pytest_generate_tests(metafunc):
-    logger.debug("pytest_generate_tests %s %s", metafunc, metafunc.fixturenames)
-    if "sosu_webdriver_capabilities" in metafunc.fixturenames:
-        return
-        if "sosu_webdriver_browser" in metafunc.fixturenames:
-            browsers = [Browser("Chrome"), Browser("Firefox")]
-            metafunc.parametrize(
-                "sosu_webdriver_browser", [pytest.param(b, id=str(b)) for b in browsers]
-            )
+    logger.debug(
+        "pytest_generate_tests",
+        metafunc=metafunc,
+        fixturenames=metafunc.fixturenames,
+    )
+    sosu_markers = [
+        item for item in metafunc.definition.own_markers if item.name == "sosu"]
+    if sosu_markers:
+        logger.debug("generate tests sosu marker(s) found", sosu_markers=sosu_markers)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -81,7 +82,7 @@ def sosu_build_name(sosu_build_basename, sosu_build_version) -> Optional[str]:
 
 
 @pytest.fixture
-def sosu_webdriver_url_data(request) -> WDUrlData:
+def sosu_webdriver_url_data(request) -> WebDriverUrlData:
     return get_remote_webdriver_url_data()
 
 
@@ -118,7 +119,7 @@ def sosu_webdriver_capabilities(
 @pytest.fixture
 def sosu_webdriver(
     request,
-    sosu_webdriver_url_data: WDUrlData,
+    sosu_webdriver_url_data: WebDriverUrlData,
     sosu_webdriver_capabilities: Capabilities,
 ):
     with remote_webdriver_ctx(
@@ -130,7 +131,7 @@ def sosu_webdriver(
         if not hasattr(request.node, "report_when_call"):
             # No report for test call set - assuming the test was interrupted.
             # Use marker exception for the `remote_webdriver_ctx`.
-            raise WDTestInterrupted()
+            raise WebDriverTestInterrupted()
         if request.node.report_when_call.failed:
             # Use marker exception for the `remote_webdriver_ctx`.
-            raise WDTestFailed()
+            raise WebDriverTestFailed()
