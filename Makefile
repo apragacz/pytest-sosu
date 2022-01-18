@@ -67,7 +67,7 @@ test_integration:  ## run integration tests
 	${PYTEST} ${PYTEST_OPTS} ${PYTEST_INTEGRATION_ARGS}
 
 .PHONY: check
-check: flake8 mypy check_black pylint  ## run all code checks
+check: flake8 check_black mypy pylint  ## run all code checks
 
 .PHONY: flake8
 flake8:  ## run flake8
