@@ -25,7 +25,9 @@ MYPY_OPTS :=
 PYLINT := pylint
 PYLINT_OPTS := --rcfile=setup.cfg
 PYTEST := py.test
-PYTEST_OPTS :=
+PYTEST_OPTS := --failed-first --maxfail 5 --durations=10 -v
+PYTEST_UNIT_OPTS := ${PYTEST_OPTS} --cov pytest_sosu --cov-report term
+PYTEST_INTEGRATION_OPTS := ${PYTEST_OPTS}
 PYTEST_UNIT_ARGS := tests/unit/ ${ARGS}
 PYTEST_INTEGRATION_ARGS := tests/integration/ ${ARGS}
 TWINE := twine
@@ -60,11 +62,11 @@ test: test_unit test_integration  ## run tests
 
 .PHONY: test_unit
 test_unit:  ## run unit tests
-	${PYTEST} ${PYTEST_OPTS} ${PYTEST_UNIT_ARGS}
+	${PYTEST} ${PYTEST_UNIT_OPTS} ${PYTEST_UNIT_ARGS}
 
 .PHONY: test_integration
 test_integration:  ## run integration tests
-	${PYTEST} ${PYTEST_OPTS} ${PYTEST_INTEGRATION_ARGS}
+	${PYTEST} ${PYTEST_INTEGRATION_OPTS} ${PYTEST_INTEGRATION_ARGS}
 
 .PHONY: check
 check: flake8 check_black mypy pylint  ## run all code checks
