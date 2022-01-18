@@ -1,13 +1,16 @@
+from enum import Enum
 from typing import Any, Callable, Optional, TypeVar, Union
+
+from pytest_sosu.types import Literal
 
 _T = TypeVar("_T")
 
 
-class _RaiseExceptionType:
-    pass
+class DefaultValues(Enum):
+    RAISE_EXCEPTION = "raise-exception"
 
 
-_RAISE_EXCEPTION = _RaiseExceptionType()
+RAISE_EXCEPTION = DefaultValues.RAISE_EXCEPTION
 
 
 def smart_bool(value: Any) -> bool:
@@ -35,7 +38,7 @@ def try_one_of_or_none(
 def try_one_of(
     first: Optional[_T],
     *other_getters: Callable[[], Optional[_T]],
-    default: Union[_T, _RaiseExceptionType] = _RAISE_EXCEPTION,
+    default: Union[_T, Literal[DefaultValues.RAISE_EXCEPTION]] = RAISE_EXCEPTION,
 ) -> _T:
     value = first
     if value is not None:
@@ -44,6 +47,6 @@ def try_one_of(
         value = value_getter()
         if value is not None:
             return value
-    if default is _RAISE_EXCEPTION:
+    if default is RAISE_EXCEPTION:
         raise ValueError("Could not match any of the value")
     return default

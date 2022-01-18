@@ -4,7 +4,7 @@ import contextlib
 import dataclasses
 import enum
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 from urllib.parse import urlparse
 
 import selenium  # type: ignore
@@ -15,7 +15,7 @@ from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu import settings
-from pytest_sosu.utils import try_one_of, try_one_of_or_none
+from pytest_sosu.utils import try_one_of_or_none
 
 logger = structlog.get_logger()
 
@@ -199,8 +199,12 @@ class SauceOptions:
         new_opts = SauceOptions(
             name=try_one_of_or_none(other.name, lambda: self.name),
             build=try_one_of_or_none(other.build, lambda: self.build),
-            max_duration=try_one_of_or_none(other.max_duration, lambda: self.max_duration),
-            idle_timeout=try_one_of_or_none(other.idle_timeout, lambda: self.idle_timeout),
+            max_duration=try_one_of_or_none(
+                other.max_duration, lambda: self.max_duration
+            ),
+            idle_timeout=try_one_of_or_none(
+                other.idle_timeout, lambda: self.idle_timeout
+            ),
             command_timeout=try_one_of_or_none(
                 other.command_timeout, lambda: self.command_timeout
             ),
@@ -306,8 +310,12 @@ class CapabilitiesMatrix:
         return self.to_dict()
 
     def iter_capabilities(self) -> Iterator[Capabilities]:
-        browsers = [None] if self.browsers is None else self.browsers
-        platforms = [None] if self.platforms is None else self.platforms
+        browsers: Sequence[Optional[Browser]] = [None]
+        if self.browsers is not None:
+            browsers = self.browsers
+        platforms: Sequence[Optional[Platform]] = [None]
+        if self.platforms is not None:
+            platforms = self.platforms
         sauce_options_list = (
             [SauceOptions.default()]
             if self.sauce_options_list is None
