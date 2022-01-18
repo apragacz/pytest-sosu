@@ -1,6 +1,6 @@
 # pylint: disable=redefined-outer-name
 import datetime
-from typing import Optional
+from typing import List, Optional
 
 import pytest
 import structlog
@@ -8,6 +8,7 @@ import structlog
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
+    CapabilitiesMatrix,
     Platform,
     SauceOptions,
     WebDriverTestFailed,
@@ -26,7 +27,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "sosu(type): mark test to run with Sauce Labs")
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item: pytest.Item):
     logger.debug("pytest_runtest_setup", item=item)
     sosu_markers = list(item.iter_markers(name="sosu"))
     if sosu_markers:
@@ -40,9 +41,31 @@ def pytest_generate_tests(metafunc):
         fixturenames=metafunc.fixturenames,
     )
     sosu_markers = [
-        item for item in metafunc.definition.own_markers if item.name == "sosu"]
-    if sosu_markers:
-        logger.debug("generate tests sosu marker(s) found", sosu_markers=sosu_markers)
+        item for item in metafunc.definition.own_markers if item.name == "sosu"
+    ]
+    if not sosu_markers:
+        return
+    logger.debug("generate tests sosu marker(s) found", sosu_markers=sosu_markers)
+
+    if "sosu_webdriver_parameter_capabilities" not in metafunc.fixturenames:
+        return
+
+    caps_matrix_list: List[CapabilitiesMatrix] = [
+        m.kwargs.get("capabilities_matrix") for m in sosu_markers
+    ]
+    caps_matrix_list = [cm for cm in caps_matrix_list if cm is not None]
+
+    assert len(caps_matrix_list) <= 1
+
+    if not caps_matrix_list:
+        return
+
+    caps_matrix = caps_matrix_list[0]
+
+    metafunc.parametrize(
+        "sosu_webdriver_parameter_capabilities",
+        [pytest.param(c, id=c.slug) for c in caps_matrix.iter_capabilities()],
+    )
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -57,7 +80,7 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture(scope="session")
-def sosu_build_basename():
+def sosu_build_basename() -> Optional[str]:
     return None
 
 
@@ -70,50 +93,69 @@ def sosu_build_time_tag() -> str:
 
 
 @pytest.fixture(scope="session")
-def sosu_build_version(sosu_build_time_tag) -> str:
+def sosu_build_version(sosu_build_time_tag: str) -> str:
     return sosu_build_time_tag
 
 
 @pytest.fixture(scope="session")
-def sosu_build_name(sosu_build_basename, sosu_build_version) -> Optional[str]:
+def sosu_build_name(sosu_build_basename: str, sosu_build_version: str) -> Optional[str]:
     if sosu_build_basename is None:
         return None
     return f"{sosu_build_basename} {sosu_build_version}"
 
 
 @pytest.fixture
-def sosu_webdriver_url_data(request) -> WebDriverUrlData:
+def sosu_webdriver_url_data() -> WebDriverUrlData:
     return get_remote_webdriver_url_data()
 
 
 @pytest.fixture
-def sosu_test_name(request) -> str:
+def sosu_test_name(request: pytest.FixtureRequest) -> str:
     return f"{request.node.function.__module__}::{request.node.name}"
 
 
 @pytest.fixture
-def sosu_webdriver_platform(request) -> Optional[Platform]:
+def sosu_webdriver_platform() -> Optional[Platform]:
     return Platform.default()
 
 
 @pytest.fixture
-def sosu_webdriver_browser(request) -> Optional[Browser]:
+def sosu_webdriver_browser() -> Optional[Browser]:
     return Browser.default()
 
 
 @pytest.fixture
-def sosu_webdriver_capabilities(
-    sosu_test_name, sosu_build_name, sosu_webdriver_platform, sosu_webdriver_browser
-) -> Capabilities:
-    sauce_options = SauceOptions(
+def sosu_sauce_options(sosu_test_name: str, sosu_build_name: str) -> SauceOptions:
+    return SauceOptions(
         name=sosu_test_name,
         build=sosu_build_name,
     )
+
+
+@pytest.fixture
+def sosu_webdriver_base_capabilities(
+    sosu_sauce_options: SauceOptions,
+    sosu_webdriver_platform: Optional[Platform],
+    sosu_webdriver_browser: Optional[Browser],
+) -> Capabilities:
     return Capabilities(
         browser=sosu_webdriver_browser,
         platform=sosu_webdriver_platform,
-        sauce_options=sauce_options,
+        sauce_options=sosu_sauce_options,
     )
+
+
+@pytest.fixture
+def sosu_webdriver_parameter_capabilities() -> Capabilities:
+    return Capabilities()
+
+
+@pytest.fixture
+def sosu_webdriver_capabilities(
+    sosu_webdriver_base_capabilities: Capabilities,
+    sosu_webdriver_parameter_capabilities: Capabilities,
+) -> Capabilities:
+    return sosu_webdriver_base_capabilities.merge(sosu_webdriver_parameter_capabilities)
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@ import contextlib
 import dataclasses
 import enum
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 from urllib.parse import urlparse
 
 import selenium  # type: ignore
@@ -15,6 +15,7 @@ from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu import settings
+from pytest_sosu.utils import try_one_of, try_one_of_or_none
 
 logger = structlog.get_logger()
 
@@ -125,8 +126,16 @@ class Browser:
     def default(cls) -> Optional[Browser]:
         return cls(name="chrome")
 
-    def __str__(self) -> str:
+    @property
+    def full_name(self) -> str:
         return f"{self.name} {self.version}"
+
+    @property
+    def slug(self) -> str:
+        return f"{self.name}-{self.version}"
+
+    def __str__(self) -> str:
+        return self.full_name
 
     def __structlog__(self) -> Dict[str, Any]:
         return self.to_dict()
@@ -154,6 +163,12 @@ class Platform:
             return f"{self.name}"
         return f"{self.name} {self.version}"
 
+    @property
+    def slug(self) -> str:
+        if self.version is None:
+            return f"{self.name}"
+        return f"{self.name}-{self.version}"
+
     def __str__(self) -> str:
         return self.full_name
 
@@ -166,11 +181,11 @@ class Platform:
 
 @dataclass(frozen=True)
 class SauceOptions:
-    name: str = "pytest-sosu test"
+    name: Optional[str] = None
     build: Optional[str] = None
-    max_duration: int = 1800
-    idle_timeout: int = 90
-    command_timeout: int = 300
+    max_duration: Optional[int] = None
+    idle_timeout: Optional[int] = None
+    command_timeout: Optional[int] = None
     visibility: Optional[SauceTestResultsVisibility] = None
 
     @classmethod
@@ -180,14 +195,31 @@ class SauceOptions:
     def __structlog__(self):
         return self.to_dict()
 
+    def merge(self, other: SauceOptions) -> SauceOptions:
+        new_opts = SauceOptions(
+            name=try_one_of_or_none(other.name, lambda: self.name),
+            build=try_one_of_or_none(other.build, lambda: self.build),
+            max_duration=try_one_of_or_none(other.max_duration, lambda: self.max_duration),
+            idle_timeout=try_one_of_or_none(other.idle_timeout, lambda: self.idle_timeout),
+            command_timeout=try_one_of_or_none(
+                other.command_timeout, lambda: self.command_timeout
+            ),
+            visibility=try_one_of_or_none(other.visibility, lambda: self.visibility),
+        )
+        return new_opts
+
     def to_dict(self) -> Dict[str, Union[str, int, float]]:
         data = {
-            "name": self.name,
             "seleniumVersion": selenium.__version__,
-            "maxDuration": self.max_duration,
-            "idleTimeout": self.idle_timeout,
-            "commandTimeout": self.command_timeout,
         }
+        if self.name:
+            data["name"] = self.name
+        if self.max_duration:
+            data["maxDuration"] = self.max_duration
+        if self.idle_timeout:
+            data["idleTimeout"] = self.idle_timeout
+        if self.command_timeout:
+            data["commandTimeout"] = self.command_timeout
         if self.visibility:
             data["public"] = self.visibility.value
         if self.build:
@@ -201,8 +233,26 @@ class Capabilities:
     platform: Optional[Platform] = Platform.default()
     sauce_options: SauceOptions = SauceOptions.default()
 
+    @property
+    def slug(self):
+        if self.browser is None and self.platform is None:
+            return "default"
+        if self.platform is None:
+            return self.browser.slug
+        if self.browser is None:
+            return self.platform.slug
+        return f"{self.browser.slug}-on-{self.platform.slug}"
+
     def __structlog__(self):
         return self.to_dict()
+
+    def merge(self, other: Capabilities) -> Capabilities:
+        new_caps = Capabilities(
+            browser=try_one_of_or_none(other.browser, lambda: self.browser),
+            platform=try_one_of_or_none(other.platform, lambda: self.platform),
+            sauce_options=self.sauce_options.merge(other.sauce_options),
+        )
+        return new_caps
 
     def to_dict(self, w3c: bool = True) -> Dict[str, Any]:
         data: Dict[str, Any] = {}
@@ -249,8 +299,31 @@ class Capabilities:
 @dataclass(frozen=True)
 class CapabilitiesMatrix:
     browsers: Optional[List[Browser]] = None
-    platforms: Optional[List[Platform]] = Platform.default()
-    sauce_options: SauceOptions = SauceOptions.default()
+    platforms: Optional[List[Platform]] = None
+    sauce_options_list: Optional[List[SauceOptions]] = None
+
+    def __structlog__(self) -> Dict[str, Any]:
+        return self.to_dict()
+
+    def iter_capabilities(self) -> Iterator[Capabilities]:
+        browsers = [None] if self.browsers is None else self.browsers
+        platforms = [None] if self.platforms is None else self.platforms
+        sauce_options_list = (
+            [SauceOptions.default()]
+            if self.sauce_options_list is None
+            else self.sauce_options_list
+        )
+        for browser in browsers:
+            for platform in platforms:
+                for sauce_options in sauce_options_list:
+                    yield Capabilities(
+                        browser=browser,
+                        platform=platform,
+                        sauce_options=sauce_options,
+                    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dataclasses.asdict(self)
 
 
 @contextlib.contextmanager
@@ -318,9 +391,10 @@ def create_remote_webdriver(
     )
     if setup_timeouts:
         timeout = capabilities.sauce_options.command_timeout
-        driver.set_page_load_timeout(timeout)
-        driver.implicitly_wait(timeout)
-        driver.set_script_timeout(timeout)
+        if timeout is not None:
+            driver.set_page_load_timeout(timeout)
+            driver.implicitly_wait(timeout)
+            driver.set_script_timeout(timeout)
     return driver
 
 
