@@ -3,8 +3,8 @@ import datetime
 from typing import List, Optional
 
 import pytest
-import structlog
 
+from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
@@ -18,7 +18,7 @@ from pytest_sosu.webdriver import (
     remote_webdriver_ctx,
 )
 
-logger = structlog.get_logger()
+logger = get_struct_logger(__name__)
 
 
 def pytest_configure(config):

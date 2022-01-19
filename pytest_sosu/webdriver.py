@@ -10,14 +10,14 @@ from urllib.parse import urlparse
 import selenium  # type: ignore
 import selenium.webdriver  # type: ignore
 import selenium.webdriver.common.by  # type: ignore
-import structlog
 from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu import settings
+from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import try_one_of_or_none
 
-logger = structlog.get_logger()
+logger = get_struct_logger(__name__)
 
 REGION_MAP = {
     "us": "us-west-1",
