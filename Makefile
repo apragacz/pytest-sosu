@@ -24,15 +24,18 @@ MYPY := mypy
 MYPY_OPTS :=
 PYLINT := pylint
 PYLINT_OPTS := --rcfile=setup.cfg
-PYTEST := py.test
+PYTEST := pytest
+PYTEST_MODULE := pytest
 PYTEST_OPTS := --failed-first --maxfail 5 --durations=10 -v
-PYTEST_UNIT_OPTS := ${PYTEST_OPTS} --cov pytest_sosu --cov-report term
+PYTEST_UNIT_OPTS := ${PYTEST_OPTS}
 PYTEST_INTEGRATION_OPTS := ${PYTEST_OPTS}
 PYTEST_UNIT_ARGS := tests/unit/ ${ARGS}
 PYTEST_INTEGRATION_ARGS := tests/integration/ ${ARGS}
 TWINE := twine
 PIP_COMPILE := pip-compile
 PIP_COMPILE_OPTS := --upgrade
+COVERAGE := coverage
+COVERAGE_RUN_OPTS := --source ${PACKAGE_DIR} --module ${PYTEST_MODULE}
 
 .PHONY: help
 help: ## Display this help screen
@@ -63,6 +66,10 @@ test: test_unit test_integration  ## run tests
 .PHONY: test_unit
 test_unit:  ## run unit tests
 	${PYTEST} ${PYTEST_UNIT_OPTS} ${PYTEST_UNIT_ARGS}
+
+.PHONY: test_unit_cov
+test_unit_cov:  ## run unit tests
+	${COVERAGE} run ${COVERAGE_RUN_OPTS} ${PYTEST_UNIT_OPTS} ${PYTEST_UNIT_ARGS}
 
 .PHONY: test_integration
 test_integration:  ## run integration tests

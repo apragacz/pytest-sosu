@@ -3,9 +3,9 @@ from pytest_sosu.webdriver import Browser, Capabilities, CapabilitiesMatrix, Pla
 
 def test_iter_capabilities():
     linux = Platform("Linux")
-    win_10 = Platform("Windows", "10")
-    chrome_97 = Browser("chrome", "97")
-    ff_96 = Browser("firefox", "96")
+    win_10 = Platform("Windows", 10)
+    chrome_97 = Browser("chrome", 97)
+    ff_96 = Browser("firefox", 96)
     caps_matrix = CapabilitiesMatrix(
         platforms=[linux, win_10],
         browsers=[chrome_97, ff_96],

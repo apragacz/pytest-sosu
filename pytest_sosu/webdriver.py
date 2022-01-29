@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu import settings
 from pytest_sosu.logging import get_struct_logger
-from pytest_sosu.utils import try_one_of_or_none
+from pytest_sosu.utils import str_or_none, try_one_of_or_none
 
 logger = get_struct_logger(__name__)
 
@@ -47,18 +47,14 @@ class WebDriverUrlData:
     @classmethod
     def from_url(cls, url: str) -> WebDriverUrlData:
         result = urlparse(url)
-        if ":" in result.netloc:
-            host, port_str = result.netloc.rsplit(":", 1)
-            port: Optional[int] = int(port_str)
-        else:
-            host = result.netloc
-            port = None
+        if result.hostname is None:
+            raise ValueError("missing hostname")
         return cls(
             scheme=result.scheme,
             username=result.username,
             access_key=result.password,
-            host=host,
-            port=port,
+            host=result.hostname,
+            port=result.port,
             path=result.path,
         )
 
@@ -118,13 +114,19 @@ class WebDriverTestInterrupted(WebDriverTestMarkerException):
 
 
 @dataclass(frozen=True)
-class Browser:
+class BaseBrowser:
     name: str
     version: str = "latest"
 
+
+@dataclass(frozen=True)
+class Browser(BaseBrowser):
     @classmethod
     def default(cls) -> Optional[Browser]:
         return cls(name="chrome")
+
+    def __init__(self, name: str, version: Union[str, int] = "latest") -> None:
+        super().__init__(name=name, version=str(version))
 
     @property
     def full_name(self) -> str:
@@ -145,10 +147,13 @@ class Browser:
 
 
 @dataclass(frozen=True)
-class Platform:
+class BasePlatform:
     name: str
     version: Optional[str] = None
 
+
+@dataclass(frozen=True)
+class Platform(BasePlatform):
     @classmethod
     def default(cls) -> Optional[Platform]:
         return None
@@ -156,6 +161,9 @@ class Platform:
     @classmethod
     def windows_default(cls) -> Optional[Platform]:
         return cls(name="Windows")
+
+    def __init__(self, name: str, version: Optional[Union[str, int]] = None) -> None:
+        super().__init__(name=name, version=str_or_none(version))
 
     @property
     def full_name(self) -> str:
