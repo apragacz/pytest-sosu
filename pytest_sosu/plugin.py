@@ -3,6 +3,7 @@ import datetime
 from typing import List, Optional
 
 import pytest
+from _pytest.config import Config
 
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.webdriver import (
@@ -21,7 +22,7 @@ from pytest_sosu.webdriver import (
 logger = get_struct_logger(__name__)
 
 
-def pytest_configure(config):
+def pytest_configure(config: Config):
     logger.debug("pytest_runtest_setup", config=config)
     # register an additional marker
     config.addinivalue_line("markers", "sosu(type): mark test to run with Sauce Labs")
@@ -133,7 +134,7 @@ def sosu_sauce_options(sosu_test_name: str, sosu_build_name: str) -> SauceOption
 
 
 @pytest.fixture
-def sosu_webdriver_base_capabilities(
+def sosu_webdriver_capabilities(
     sosu_sauce_options: SauceOptions,
     sosu_webdriver_platform: Optional[Platform],
     sosu_webdriver_browser: Optional[Browser],
@@ -151,22 +152,22 @@ def sosu_webdriver_parameter_capabilities() -> Capabilities:
 
 
 @pytest.fixture
-def sosu_webdriver_capabilities(
-    sosu_webdriver_base_capabilities: Capabilities,
+def sosu_webdriver_combined_capabilities(
+    sosu_webdriver_capabilities: Capabilities,
     sosu_webdriver_parameter_capabilities: Capabilities,
 ) -> Capabilities:
-    return sosu_webdriver_base_capabilities.merge(sosu_webdriver_parameter_capabilities)
+    return sosu_webdriver_capabilities.merge(sosu_webdriver_parameter_capabilities)
 
 
 @pytest.fixture
 def sosu_webdriver(
     request,
     sosu_webdriver_url_data: WebDriverUrlData,
-    sosu_webdriver_capabilities: Capabilities,
+    sosu_webdriver_combined_capabilities: Capabilities,
 ):
     with remote_webdriver_ctx(
         sosu_webdriver_url_data,
-        sosu_webdriver_capabilities,
+        sosu_webdriver_combined_capabilities,
     ) as webdriver:
         yield webdriver
         # Using attribute defined in `pytest_runtest_makereport`.
