@@ -1,15 +1,15 @@
 # pylint: disable=redefined-outer-name
 import datetime
-from typing import List, Optional
+from typing import Optional
 
 import pytest
 from _pytest.config import Config
 
 from pytest_sosu.logging import get_struct_logger
+from pytest_sosu.plugin_helpers import parametrize_capabilities
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
-    CapabilitiesMatrix,
     Platform,
     SauceOptions,
     WebDriverTestFailed,
@@ -41,32 +41,8 @@ def pytest_generate_tests(metafunc):
         metafunc=metafunc,
         fixturenames=metafunc.fixturenames,
     )
-    sosu_markers = [
-        item for item in metafunc.definition.own_markers if item.name == "sosu"
-    ]
-    if not sosu_markers:
-        return
-    logger.debug("generate tests sosu marker(s) found", sosu_markers=sosu_markers)
 
-    if "sosu_webdriver_parameter_capabilities" not in metafunc.fixturenames:
-        return
-
-    caps_matrix_list: List[CapabilitiesMatrix] = [
-        m.kwargs.get("capabilities_matrix") for m in sosu_markers
-    ]
-    caps_matrix_list = [cm for cm in caps_matrix_list if cm is not None]
-
-    assert len(caps_matrix_list) <= 1
-
-    if not caps_matrix_list:
-        return
-
-    caps_matrix = caps_matrix_list[0]
-
-    metafunc.parametrize(
-        "sosu_webdriver_parameter_capabilities",
-        [pytest.param(c, id=c.slug) for c in caps_matrix.iter_capabilities()],
-    )
+    parametrize_capabilities(metafunc)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
