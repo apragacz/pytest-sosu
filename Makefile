@@ -112,11 +112,11 @@ black:  ## run black
 	${BLACK} ${BLACK_OPTS} ${BLACK_ARGS}
 
 .PHONY: bump_version_patch
-bump_version_patch:
+bump_version_patch:  ## bump package version by the patch part
 	bump2version patch
 
 .PHONY: bump_version_minor
-bump_version_minor:
+bump_version_minor:  ## bump package version by the minor part
 	bump2version minor
 
 .PHONY: build
