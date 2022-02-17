@@ -111,6 +111,14 @@ check_package: build_package  ## check that the built package is well-formed
 black:  ## run black
 	${BLACK} ${BLACK_OPTS} ${BLACK_ARGS}
 
+.PHONY: bump_version_patch
+bump_version_patch:
+	bump2version patch
+
+.PHONY: bump_version_minor
+bump_version_minor:
+	bump2version minor
+
 .PHONY: build
 build: build_package  ## alias for build_package
 
