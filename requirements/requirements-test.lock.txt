@@ -10,7 +10,7 @@ attrs==21.4.0
     # via
     #   -r requirements/requirements-base.lock.txt
     #   pytest
-black==21.12b0
+black==22.1.0
     # via -r requirements/requirements-test.in
 bleach==4.1.0
     # via readme-renderer
@@ -18,7 +18,7 @@ certifi==2021.10.8
     # via requests
 cffi==1.15.0
     # via cmarkgfm
-charset-normalizer==2.0.10
+charset-normalizer==2.0.12
     # via requests
 click==8.0.3
     # via black
@@ -28,7 +28,7 @@ codecov==2.1.12
     # via -r requirements/requirements-test.in
 colorama==0.4.4
     # via twine
-coverage[toml]==6.2
+coverage[toml]==6.3.1
     # via
     #   codecov
     #   pytest-cov
@@ -38,7 +38,7 @@ docutils==0.18.1
     # via
     #   -r requirements/requirements-test.in
     #   readme-renderer
-filelock==3.4.2
+filelock==3.6.0
     # via
     #   tox
     #   virtualenv
@@ -100,7 +100,7 @@ pathspec==0.9.0
     # via black
 pkginfo==1.8.2
     # via twine
-platformdirs==2.4.1
+platformdirs==2.5.0
     # via
     #   black
     #   pylint
@@ -130,11 +130,11 @@ pygments==2.11.2
     #   readme-renderer
 pylint==2.12.2
     # via -r requirements/requirements-test.in
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via
     #   -r requirements/requirements-base.lock.txt
     #   packaging
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   -r requirements/requirements-base.lock.txt
     #   -r requirements/requirements-test.in
@@ -170,26 +170,26 @@ testfixtures==6.18.3
     # via flake8-isort
 toml==0.10.2
     # via
-    #   -r requirements/requirements-base.lock.txt
     #   pylint
-    #   pytest
     #   tox
-tomli==1.2.3
+tomli==2.0.1
     # via
+    #   -r requirements/requirements-base.lock.txt
     #   black
     #   coverage
     #   mypy
+    #   pytest
 tox==3.24.5
     # via -r requirements/requirements-test.in
 tqdm==4.62.3
     # via twine
-twine==3.7.1
+twine==3.8.0
     # via -r requirements/requirements-test.in
-types-setuptools==57.4.7
+types-setuptools==57.4.9
     # via -r requirements/requirements-test.in
-types-toml==0.10.3
+types-toml==0.10.4
     # via -r requirements/requirements-test.in
-typing-extensions==4.0.1
+typing-extensions==4.1.1
     # via
     #   astroid
     #   black
@@ -200,7 +200,8 @@ urllib3==1.26.8
     #   -r requirements/requirements-base.lock.txt
     #   requests
     #   selenium
-virtualenv==20.13.0
+    #   twine
+virtualenv==20.13.1
     # via tox
 webencodings==0.5.1
     # via bleach

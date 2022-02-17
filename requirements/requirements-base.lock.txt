@@ -16,15 +16,15 @@ pluggy==1.0.0
     # via pytest
 py==1.11.0
     # via pytest
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via packaging
-pytest==6.2.5
+pytest==7.0.1
     # via pytest-sosu (setup.py)
 selenium==3.141.0
     # via pytest-sosu (setup.py)
 structlog==21.5.0
     # via pytest-sosu (setup.py)
-toml==0.10.2
+tomli==2.0.1
     # via pytest
 urllib3==1.26.8
     # via selenium
