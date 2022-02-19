@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name
 import datetime
 import os
-from typing import Optional
+from typing import Any, Callable, Optional
 
 import pytest
 from _pytest.config import Config
@@ -101,9 +101,9 @@ def sosu_build_basename() -> Optional[str]:
 @pytest.fixture(scope="session")
 def sosu_build_time_tag() -> str:
     now = datetime.datetime.now()
-    date_str = f"{now.year}-{now.month:02d}-{now.day:02d}"
-    time_str = f"{now.hour:02d}:{now.minute:02d}"
-    return f"{date_str} {time_str}"
+    date_str = f"{now.year}{now.month:02d}{now.day:02d}"
+    time_str = f"{now.hour:02d}{now.minute:02d}"
+    return f"{date_str}_{time_str}"
 
 
 @pytest.fixture(scope="session")
@@ -126,7 +126,13 @@ def sosu_webdriver_url_data(pytestconfig: Config) -> WebDriverUrlData:
 
 @pytest.fixture
 def sosu_test_name(request: pytest.FixtureRequest) -> str:
-    return f"{request.node.function.__module__}::{request.node.name}"
+    path = get_function_path(request.node.function)
+    return f"{path}::{request.node.name}"
+
+
+def get_function_path(func: Callable[..., Any]) -> str:
+    rel_path = func.__module__.replace(".", "/")
+    return f"{rel_path}.py"
 
 
 @pytest.fixture
