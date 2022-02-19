@@ -13,6 +13,7 @@ import selenium.webdriver.common.by  # type: ignore
 from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By  # noqa: F401
 
+from pytest_sosu.exceptions import WebDriverTestFailed, WebDriverTestInterrupted
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import str_or_none, try_one_of_or_none
 
@@ -91,18 +92,6 @@ class WebDriverUrlData:
             access_key=access_key,
             path=self.path,
         )
-
-
-class WebDriverTestMarkerException(Exception):
-    pass
-
-
-class WebDriverTestFailed(WebDriverTestMarkerException):
-    pass
-
-
-class WebDriverTestInterrupted(WebDriverTestMarkerException):
-    pass
 
 
 @dataclass(frozen=True)
