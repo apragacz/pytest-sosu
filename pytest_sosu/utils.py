@@ -25,10 +25,6 @@ def convert_or_none(value: Any, converter_func: Callable[[Any], _T]) -> Optional
     return converter_func(value)
 
 
-def int_or_none(value: Any) -> Optional[int]:
-    return convert_or_none(value, int)
-
-
 def str_or_none(value: Any) -> Optional[str]:
     return convert_or_none(value, str)
 
