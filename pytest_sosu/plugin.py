@@ -1,10 +1,12 @@
 # pylint: disable=redefined-outer-name
 import datetime
+import os
 from typing import Optional
 
 import pytest
 from _pytest.config import Config
 
+from pytest_sosu.config import SosuConfig, build_sosu_config
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.plugin_helpers import parametrize_capabilities
 from pytest_sosu.webdriver import (
@@ -15,17 +17,52 @@ from pytest_sosu.webdriver import (
     WebDriverTestFailed,
     WebDriverTestInterrupted,
     WebDriverUrlData,
-    get_remote_webdriver_url_data,
     remote_webdriver_ctx,
 )
 
 logger = get_struct_logger(__name__)
 
 
+def pytest_addoption(parser):
+    group = parser.getgroup("sosu plugin sauce labs configuration")
+
+    group.addoption(
+        "--sosu-username",
+        action="store",
+        metavar="SAUCE_USERNAME",
+        help="Sauce Labs username",
+    )
+    group.addoption(
+        "--sosu-access-key",
+        action="store",
+        metavar="SAUCE_ACCESS_KEY",
+        help="Sauce Labs access key",
+    )
+    group.addoption(
+        "--sosu-region",
+        action="store",
+        metavar="SAUCE_REGION",
+        help="Sauce Labs region",
+    )
+    group.addoption(
+        "--sosu-webdriver-url",
+        action="store",
+        metavar="SAUCE_WEBDRIVER_URL",
+        help="Sauce Labs WebDriver URL",
+    )
+
+
 def pytest_configure(config: Config):
     logger.debug("pytest_runtest_setup", config=config)
     # register an additional marker
     config.addinivalue_line("markers", "sosu(type): mark test to run with Sauce Labs")
+
+    sosu_config = build_sosu_config(config.option, os.environ)
+    setattr(config, "sosu", sosu_config)
+
+
+def _get_sosu_config(config: Config) -> SosuConfig:
+    return getattr(config, "sosu")
 
 
 def pytest_runtest_setup(item: pytest.Item):
@@ -82,8 +119,9 @@ def sosu_build_name(sosu_build_basename: str, sosu_build_version: str) -> Option
 
 
 @pytest.fixture
-def sosu_webdriver_url_data() -> WebDriverUrlData:
-    return get_remote_webdriver_url_data()
+def sosu_webdriver_url_data(config: Config) -> WebDriverUrlData:
+    sosu_config = _get_sosu_config(config)
+    return sosu_config.webdriver_url_data_with_credentials
 
 
 @pytest.fixture

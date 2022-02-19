@@ -13,18 +13,10 @@ import selenium.webdriver.common.by  # type: ignore
 from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By  # noqa: F401
 
-from pytest_sosu import settings
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import str_or_none, try_one_of_or_none
 
 logger = get_struct_logger(__name__)
-
-REGION_MAP = {
-    "us": "us-west-1",
-    "eu": "eu-central-1",
-    "apac": "apac-southeast-1",
-    "headless": "us-east-1",
-}
 
 
 class SauceTestResultsVisibility(enum.Enum):
@@ -412,31 +404,3 @@ def create_remote_webdriver(
             driver.implicitly_wait(timeout)
             driver.set_script_timeout(timeout)
     return driver
-
-
-def get_remote_webdriver_url_data() -> WebDriverUrlData:
-    if settings.SAUCE_WEBDRIVER_URL:
-        wd_url_data = WebDriverUrlData.from_url(settings.SAUCE_WEBDRIVER_URL)
-    else:
-        if settings.SAUCE_WEBDRIVER_HOST:
-            host = settings.SAUCE_WEBDRIVER_HOST
-        else:
-            host = get_host_by_region(settings.SAUCE_REGION)
-        wd_url_data = WebDriverUrlData(
-            host=host,
-            port=settings.SAUCE_WEBDRIVER_PORT,
-            scheme=settings.SAUCE_WEBDRIVER_SCHEME,
-            path=settings.SAUCE_WEBDRIVER_PATH,
-        )
-    if not wd_url_data.has_credentials:
-        wd_url_data = wd_url_data.with_credentials(
-            settings.SAUCE_USERNAME, settings.SAUCE_ACCESS_KEY
-        )
-    return wd_url_data
-
-
-def get_host_by_region(region: str) -> str:
-    if not region or region == "global":
-        return "ondemand.saucelabs.com"
-    host_region = REGION_MAP.get(region, region)
-    return f"ondemand.{host_region}.saucelabs.com"
