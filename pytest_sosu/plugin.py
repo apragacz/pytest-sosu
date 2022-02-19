@@ -112,7 +112,9 @@ def sosu_build_version(sosu_build_time_tag: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def sosu_build_name(sosu_build_basename: Optional[str], sosu_build_version: str) -> Optional[str]:
+def sosu_build_name(
+    sosu_build_basename: Optional[str], sosu_build_version: str
+) -> Optional[str]:
     if sosu_build_basename is None:
         return None
     return f"{sosu_build_basename}_{sosu_build_version}"
