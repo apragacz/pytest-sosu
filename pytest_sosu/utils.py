@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Callable, Optional, TypeVar, Union
 
-from pytest_sosu.types import Literal
+from pytest_sosu.typing import Literal
 
 _T = TypeVar("_T")
 
