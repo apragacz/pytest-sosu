@@ -112,15 +112,15 @@ def sosu_build_version(sosu_build_time_tag: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def sosu_build_name(sosu_build_basename: str, sosu_build_version: str) -> Optional[str]:
+def sosu_build_name(sosu_build_basename: Optional[str], sosu_build_version: str) -> Optional[str]:
     if sosu_build_basename is None:
         return None
-    return f"{sosu_build_basename} {sosu_build_version}"
+    return f"{sosu_build_basename}_{sosu_build_version}"
 
 
 @pytest.fixture
-def sosu_webdriver_url_data(config: Config) -> WebDriverUrlData:
-    sosu_config = _get_sosu_config(config)
+def sosu_webdriver_url_data(pytestconfig: Config) -> WebDriverUrlData:
+    sosu_config = _get_sosu_config(pytestconfig)
     return sosu_config.webdriver_url_data_with_credentials
 
 
