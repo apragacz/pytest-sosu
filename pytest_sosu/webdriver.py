@@ -172,6 +172,7 @@ class Platform(BasePlatform):
 class SauceOptions:
     name: Optional[str] = None
     build: Optional[str] = None
+    tunnel_name: Optional[str] = None
     max_duration: Optional[int] = None
     idle_timeout: Optional[int] = None
     command_timeout: Optional[int] = None
@@ -207,6 +208,10 @@ class SauceOptions:
         }
         if self.name:
             data["name"] = self.name
+        if self.build:
+            data["build"] = self.build
+        if self.tunnel_name:
+            data["tunnelName"] = self.tunnel_name
         if self.max_duration:
             data["maxDuration"] = self.max_duration
         if self.idle_timeout:
@@ -215,8 +220,6 @@ class SauceOptions:
             data["commandTimeout"] = self.command_timeout
         if self.visibility:
             data["public"] = self.visibility.value
-        if self.build:
-            data["build"] = self.build
         return data
 
 
