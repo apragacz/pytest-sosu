@@ -54,3 +54,8 @@ def try_one_of(
     if default is RAISE_EXCEPTION:
         raise ValueError("Could not match any of the value")
     return default
+
+
+def convert_snake_case_to_camel_case(value: str) -> str:
+    first_segment, *other_segments = value.split("_")
+    return first_segment + "".join(seg.capitalize() for seg in other_segments)

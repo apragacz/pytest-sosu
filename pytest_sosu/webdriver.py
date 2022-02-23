@@ -15,7 +15,11 @@ from selenium.webdriver.common.by import By  # noqa: F401
 
 from pytest_sosu.exceptions import WebDriverTestFailed, WebDriverTestInterrupted
 from pytest_sosu.logging import get_struct_logger
-from pytest_sosu.utils import str_or_none, try_one_of_or_none
+from pytest_sosu.utils import (
+    convert_snake_case_to_camel_case,
+    str_or_none,
+    try_one_of_or_none,
+)
 
 logger = get_struct_logger(__name__)
 
@@ -172,11 +176,24 @@ class Platform(BasePlatform):
 class SauceOptions:
     name: Optional[str] = None
     build: Optional[str] = None
+    tags: Optional[List[str]] = None
+    username: Optional[str] = None
+    access_key: Optional[str] = None
+    custom_data: Optional[Dict[str, Any]] = None
+    visibility: Optional[SauceTestResultsVisibility] = None
     tunnel_name: Optional[str] = None
+    tunnel_identifier: Optional[str] = None
+    tunnel_owner: Optional[str] = None
+    parent_tunnel: Optional[str] = None
+    record_video: Optional[bool] = None
+    video_upload_on_pass: Optional[bool] = None
+    record_screenshots: Optional[bool] = None
+    record_logs: Optional[bool] = None
     max_duration: Optional[int] = None
     idle_timeout: Optional[int] = None
     command_timeout: Optional[int] = None
-    visibility: Optional[SauceTestResultsVisibility] = None
+
+    TO_DICT_AUTO_EXCLUDES = ("custom_data", "visibility")
 
     @classmethod
     def default(cls) -> SauceOptions:
@@ -186,39 +203,37 @@ class SauceOptions:
         return self.to_dict()
 
     def merge(self, other: SauceOptions) -> SauceOptions:
-        new_opts = SauceOptions(
-            name=try_one_of_or_none(other.name, lambda: self.name),
-            build=try_one_of_or_none(other.build, lambda: self.build),
-            max_duration=try_one_of_or_none(
-                other.max_duration, lambda: self.max_duration
-            ),
-            idle_timeout=try_one_of_or_none(
-                other.idle_timeout, lambda: self.idle_timeout
-            ),
-            command_timeout=try_one_of_or_none(
-                other.command_timeout, lambda: self.command_timeout
-            ),
-            visibility=try_one_of_or_none(other.visibility, lambda: self.visibility),
-        )
+        kwargs: Dict[str, Any] = {}
+        for field in dataclasses.fields(self):
+            name = field.name
+            kwargs[name] = self._merge_field(other, name)
+        new_opts = SauceOptions(**kwargs)
         return new_opts
 
-    def to_dict(self) -> Dict[str, Union[str, int, float]]:
-        data = {
-            "seleniumVersion": selenium.__version__,
-        }
-        if self.name:
-            data["name"] = self.name
-        if self.build:
-            data["build"] = self.build
-        if self.tunnel_name:
-            data["tunnelName"] = self.tunnel_name
-        if self.max_duration:
-            data["maxDuration"] = self.max_duration
-        if self.idle_timeout:
-            data["idleTimeout"] = self.idle_timeout
-        if self.command_timeout:
-            data["commandTimeout"] = self.command_timeout
-        if self.visibility:
+    def _merge_field(self, other, name):
+        return try_one_of_or_none(
+            getattr(other, name),
+            lambda: getattr(self, name),
+        )
+
+    def to_dict(
+        self, selenium_version: bool = True
+    ) -> Dict[str, Union[str, int, float]]:
+        data = {}
+        if selenium_version:
+            data["seleniumVersion"] = selenium.__version__
+        for field in dataclasses.fields(self):
+            name = field.name
+            if name in self.TO_DICT_AUTO_EXCLUDES:
+                continue
+            value = getattr(self, name)
+            if value is None:
+                continue
+            dict_name = convert_snake_case_to_camel_case(name)
+            data[dict_name] = value
+        if self.custom_data is not None:
+            data["custom-data"] = self.custom_data
+        if self.visibility is not None:
             data["public"] = self.visibility.value
         return data
 
@@ -250,7 +265,9 @@ class Capabilities:
         )
         return new_caps
 
-    def to_dict(self, w3c: bool = True) -> Dict[str, Any]:
+    def to_dict(
+        self, w3c: bool = True, selenium_version: bool = True
+    ) -> Dict[str, Any]:
         data: Dict[str, Any] = {}
         if w3c:
             data.update(
@@ -287,7 +304,9 @@ class Capabilities:
                 )
 
         sauce_options_data = data["sauce:options"] if w3c else data
-        sauce_options_data.update(self.sauce_options.to_dict())
+        sauce_options_data.update(
+            self.sauce_options.to_dict(selenium_version=selenium_version)
+        )
 
         return data
 

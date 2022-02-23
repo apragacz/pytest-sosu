@@ -1,4 +1,7 @@
+from typing import Any, Dict
+
 import pytest
+import selenium
 
 from pytest_sosu.webdriver import SauceOptions
 
@@ -34,3 +37,28 @@ from pytest_sosu.webdriver import SauceOptions
 )
 def test_merge(opts1: SauceOptions, opts2: SauceOptions, expected_result: SauceOptions):
     assert opts1.merge(opts2) == expected_result
+
+
+@pytest.mark.parametrize(
+    "opts,expected_result",
+    [
+        pytest.param(
+            SauceOptions(name="test name"),
+            {
+                "name": "test name",
+                "seleniumVersion": selenium.__version__,
+            },
+            id="name",
+        ),
+        pytest.param(
+            SauceOptions(record_video=False),
+            {
+                "recordVideo": False,
+                "seleniumVersion": selenium.__version__,
+            },
+            id="record video",
+        ),
+    ],
+)
+def test_to_dict(opts: SauceOptions, expected_result: Dict[str, Any]):
+    assert opts.to_dict() == expected_result
