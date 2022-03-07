@@ -32,12 +32,12 @@ charset-normalizer==2.0.12
     # via
     #   -r requirements/requirements-test.lock.txt
     #   requests
-click==8.0.3
+click==8.0.4
     # via
     #   -r requirements/requirements-test.lock.txt
     #   black
     #   pip-tools
-cmarkgfm==0.6.0
+cmarkgfm==0.8.0
     # via
     #   -r requirements/requirements-test.lock.txt
     #   readme-renderer
@@ -47,7 +47,7 @@ colorama==0.4.4
     # via
     #   -r requirements/requirements-test.lock.txt
     #   twine
-coverage[toml]==6.3.1
+coverage[toml]==6.3.2
     # via
     #   -r requirements/requirements-test.lock.txt
     #   codecov
@@ -87,7 +87,7 @@ idna==3.3
     # via
     #   -r requirements/requirements-test.lock.txt
     #   requests
-importlib-metadata==4.2.0
+importlib-metadata==4.11.2
     # via
     #   -r requirements/requirements-test.lock.txt
     #   keyring
@@ -139,7 +139,7 @@ pkginfo==1.8.2
     # via
     #   -r requirements/requirements-test.lock.txt
     #   twine
-platformdirs==2.5.0
+platformdirs==2.5.1
     # via
     #   -r requirements/requirements-test.lock.txt
     #   black
@@ -185,7 +185,7 @@ pytest==7.0.1
     #   pytest-cov
 pytest-cov==3.0.0
     # via -r requirements/requirements-test.lock.txt
-readme-renderer[md]==32.0
+readme-renderer[md]==33.0
     # via
     #   -r requirements/requirements-test.lock.txt
     #   twine
@@ -216,7 +216,7 @@ six==1.16.0
     #   virtualenv
 structlog==21.5.0
     # via -r requirements/requirements-test.lock.txt
-testfixtures==6.18.3
+testfixtures==6.18.5
     # via
     #   -r requirements/requirements-test.lock.txt
     #   flake8-isort
@@ -234,7 +234,7 @@ tomli==2.0.1
     #   pytest
 tox==3.24.5
     # via -r requirements/requirements-test.lock.txt
-tqdm==4.62.3
+tqdm==4.63.0
     # via
     #   -r requirements/requirements-test.lock.txt
     #   twine
@@ -257,7 +257,7 @@ urllib3==1.26.8
     #   requests
     #   selenium
     #   twine
-virtualenv==20.13.1
+virtualenv==20.13.3
     # via
     #   -r requirements/requirements-test.lock.txt
     #   tox

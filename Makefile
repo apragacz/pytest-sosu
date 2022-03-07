@@ -56,12 +56,16 @@ install_test:  ## install all pip requirements needed for testing and the packag
 
 .PHONY: upgrade_requirements_lockfiles
 upgrade_requirements_lockfiles:  ## upgrade pip requirements lock files
+	${PYTHON} -m pip install pip-tools
 	${PIP_COMPILE} ${PIP_COMPILE_OPTS} --output-file=requirements/requirements-base.lock.txt
 	${PIP_COMPILE} ${PIP_COMPILE_OPTS} --output-file=requirements/requirements-test.lock.txt requirements/requirements-base.lock.txt requirements/requirements-test.in
 	${PIP_COMPILE} ${PIP_COMPILE_OPTS} --output-file=requirements/requirements-dev.lock.txt requirements/requirements-test.lock.txt requirements/requirements-dev.in
 
-.PHONY: upgrade_requirements
-upgrade_requirements: upgrade_requirements_lockfiles install_dev  ## upgrade pip requirements lock files
+.PHONY: upgrade_dev
+upgrade_dev: upgrade_requirements_lockfiles install_dev  ## upgrade all pip requirements and reinstall package as editable
+
+.PHONY: upgrade_test
+upgrade_test: upgrade_requirements_lockfiles install_test  ## upgrade all pip requirements needed for testing and reinstall package as editable
 
 .PHONY: test
 test: test_unit test_integration  ## run tests

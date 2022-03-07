@@ -6,8 +6,6 @@
 #
 attrs==21.4.0
     # via pytest
-importlib-metadata==4.2.0
-    # via pytest-sosu (setup.py)
 iniconfig==1.1.1
     # via pytest
 packaging==21.3
@@ -28,5 +26,3 @@ tomli==2.0.1
     # via pytest
 urllib3==1.26.8
     # via selenium
-zipp==3.7.0
-    # via importlib-metadata
