@@ -25,7 +25,7 @@ def render_event_dict_into_msg(
     logger: logging.Logger, method_name: str, event_dict: EventDict
 ):
     event = event_dict.pop("event")
-    msg = event + " " + " ".join(_iter_kv_strings(event_dict))
+    msg = event + "     " + " ".join(_iter_kv_strings(event_dict))
     return {"event": msg}
 
 
