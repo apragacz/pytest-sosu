@@ -16,6 +16,7 @@ from selenium.webdriver.common.by import By  # noqa: F401
 from pytest_sosu.exceptions import WebDriverTestFailed, WebDriverTestInterrupted
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import (
+    ImmutableDict,
     convert_snake_case_to_camel_case,
     str_or_none,
     try_one_of_or_none,
@@ -192,6 +193,10 @@ class SauceOptions:
     max_duration: Optional[int] = None
     idle_timeout: Optional[int] = None
     command_timeout: Optional[int] = None
+    screen_resolution: Optional[str] = None
+    extras: ImmutableDict[str, Any] = dataclasses.field(
+        default_factory=lambda: ImmutableDict({}),
+    )
 
     auto_include_selenium_version: bool = True
 
@@ -199,6 +204,7 @@ class SauceOptions:
         "custom_data",
         "visibility",
         "auto_include_selenium_version",
+        "extras",
     )
 
     @classmethod
@@ -244,6 +250,7 @@ class SauceOptions:
             data["custom-data"] = self.custom_data
         if self.visibility is not None:
             data["public"] = self.visibility.value
+        data.update(self.extras)
         return data
 
 
@@ -252,6 +259,9 @@ class Capabilities:
     browser: Optional[Browser] = Browser.default()
     platform: Optional[Platform] = Platform.default()
     sauce_options: SauceOptions = SauceOptions.default()
+    extras: ImmutableDict[str, Any] = dataclasses.field(
+        default_factory=lambda: ImmutableDict({}),
+    )
 
     w3c_mode: bool = True
 
@@ -325,6 +335,8 @@ class Capabilities:
                 auto_include_selenium_version=auto_include_selenium_version,
             )
         )
+
+        data.update(self.extras)
 
         return data
 

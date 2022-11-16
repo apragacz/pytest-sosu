@@ -1,9 +1,11 @@
 from enum import Enum
-from typing import Any, Callable, Optional, TypeVar, Union
+from types import MappingProxyType
+from typing import Any, Callable, Iterator, Mapping, Optional, TypeVar, Union
 
 from pytest_sosu.typing import Literal
 
 _T = TypeVar("_T")
+_S = TypeVar("_S")
 
 
 class DefaultValues(Enum):
@@ -11,6 +13,26 @@ class DefaultValues(Enum):
 
 
 RAISE_EXCEPTION = DefaultValues.RAISE_EXCEPTION
+
+
+class ImmutableDict(Mapping[_T, _S]):
+    def __init__(self, _dict: Mapping[_T, _S]):
+        self._mapping_proxy = MappingProxyType(_dict)
+
+    def __getitem__(self, key: _T) -> _S:
+        return self._mapping_proxy[key]
+
+    def __iter__(self) -> Iterator[_T]:
+        return iter(self._mapping_proxy)
+
+    def __len__(self) -> int:
+        return len(self._mapping_proxy)
+
+    def __hash__(self) -> int:
+        return hash(tuple(sorted((k, v) for k, v in self._mapping_proxy.items())))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({dict(self._mapping_proxy)})"
 
 
 def smart_bool(value: Any) -> bool:
