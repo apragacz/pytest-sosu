@@ -53,7 +53,7 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config: Config):
-    logger.debug("pytest_runtest_setup", config=config)
+    logger.debug("pytest_configure", config=config)
     # register an additional marker
     config.addinivalue_line("markers", "sosu(type): mark test to run with Sauce Labs")
 
