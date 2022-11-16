@@ -193,7 +193,13 @@ class SauceOptions:
     idle_timeout: Optional[int] = None
     command_timeout: Optional[int] = None
 
-    TO_DICT_AUTO_EXCLUDES = ("custom_data", "visibility")
+    auto_include_selenium_version: bool = True
+
+    TO_DICT_AUTO_EXCLUDES = (
+        "custom_data",
+        "visibility",
+        "auto_include_selenium_version",
+    )
 
     @classmethod
     def default(cls) -> SauceOptions:
@@ -217,10 +223,13 @@ class SauceOptions:
         )
 
     def to_dict(
-        self, selenium_version: bool = True
+        self, auto_include_selenium_version: Optional[bool] = None
     ) -> Dict[str, Union[str, int, float]]:
+        if auto_include_selenium_version is None:
+            auto_include_selenium_version = self.auto_include_selenium_version
+
         data = {}
-        if selenium_version:
+        if auto_include_selenium_version:
             data["seleniumVersion"] = selenium.__version__
         for field in dataclasses.fields(self):
             name = field.name
@@ -244,6 +253,8 @@ class Capabilities:
     platform: Optional[Platform] = Platform.default()
     sauce_options: SauceOptions = SauceOptions.default()
 
+    w3c_mode: bool = True
+
     @property
     def slug(self):
         if self.browser is None and self.platform is None:
@@ -266,10 +277,15 @@ class Capabilities:
         return new_caps
 
     def to_dict(
-        self, w3c: bool = True, selenium_version: bool = True
+        self,
+        w3c_mode: Optional[bool] = None,
+        auto_include_selenium_version: Optional[bool] = None,
     ) -> Dict[str, Any]:
+        if w3c_mode is None:
+            w3c_mode = self.w3c_mode
+
         data: Dict[str, Any] = {}
-        if w3c:
+        if w3c_mode:
             data.update(
                 {
                     "sauce:options": {},
@@ -303,9 +319,11 @@ class Capabilities:
                     }
                 )
 
-        sauce_options_data = data["sauce:options"] if w3c else data
+        sauce_options_data = data["sauce:options"] if w3c_mode else data
         sauce_options_data.update(
-            self.sauce_options.to_dict(selenium_version=selenium_version)
+            self.sauce_options.to_dict(
+                auto_include_selenium_version=auto_include_selenium_version,
+            )
         )
 
         return data
@@ -356,7 +374,9 @@ def remote_webdriver_ctx(
     wd_safe_url = url_data.to_safe_url()
     logger.debug("Driver starting", capabilities=capabilities, wd_url=wd_safe_url)
     driver = create_remote_webdriver(
-        url_data, capabilities, setup_timeouts=setup_timeouts
+        url_data,
+        capabilities,
+        setup_timeouts=setup_timeouts,
     )
     session_id = driver.session_id
     logger.debug(
