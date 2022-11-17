@@ -13,6 +13,7 @@ from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import (
     ImmutableDict,
     convert_snake_case_to_camel_case,
+    try_one_of,
     try_one_of_or_none,
 )
 from pytest_sosu.webdriver.platforms import Browser, Platform
@@ -53,7 +54,7 @@ class SauceOptions:
         default_factory=lambda: ImmutableDict({}),
     )
 
-    auto_include_selenium_version: bool = True
+    auto_include_selenium_version: Optional[bool] = None
 
     TO_DICT_AUTO_EXCLUDES = (
         "custom_data",
@@ -73,7 +74,10 @@ class SauceOptions:
         kwargs: Dict[str, Any] = {}
         for field in dataclasses.fields(self):
             name = field.name
+            if name == "extras":
+                continue
             kwargs[name] = self._merge_field(other, name)
+        kwargs["extras"] = self.extras.merge(other.extras)
         new_opts = SauceOptions(**kwargs)
         return new_opts
 
@@ -86,8 +90,12 @@ class SauceOptions:
     def to_dict(
         self, auto_include_selenium_version: Optional[bool] = None
     ) -> Dict[str, Union[str, int, float]]:
-        if auto_include_selenium_version is None:
-            auto_include_selenium_version = self.auto_include_selenium_version
+
+        auto_include_selenium_version = try_one_of(
+            auto_include_selenium_version,
+            lambda: self.auto_include_selenium_version,
+            default=True,
+        )
 
         data = {}
         if auto_include_selenium_version:
@@ -118,7 +126,7 @@ class Capabilities:
         default_factory=lambda: ImmutableDict({}),
     )
 
-    w3c_mode: bool = True
+    w3c_mode: Optional[bool] = None
 
     @property
     def slug(self):
@@ -138,6 +146,8 @@ class Capabilities:
             browser=try_one_of_or_none(other.browser, lambda: self.browser),
             platform=try_one_of_or_none(other.platform, lambda: self.platform),
             sauce_options=self.sauce_options.merge(other.sauce_options),
+            extras=self.extras.merge(other.extras),
+            w3c_mode=try_one_of_or_none(other.w3c_mode, lambda: self.w3c_mode),
         )
         return new_caps
 
@@ -146,8 +156,7 @@ class Capabilities:
         w3c_mode: Optional[bool] = None,
         auto_include_selenium_version: Optional[bool] = None,
     ) -> Dict[str, Any]:
-        if w3c_mode is None:
-            w3c_mode = self.w3c_mode
+        w3c_mode = try_one_of(w3c_mode, lambda: self.w3c_mode, default=True)
 
         data: Dict[str, Any] = {}
         if w3c_mode:

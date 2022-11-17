@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from enum import Enum
 from types import MappingProxyType
-from typing import Any, Callable, Iterator, Mapping, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, Iterator, Mapping, Optional, TypeVar, Union
 
 from pytest_sosu.typing import Literal
 
@@ -33,6 +35,12 @@ class ImmutableDict(Mapping[_T, _S]):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({dict(self._mapping_proxy)})"
+
+    def merge(self, other: ImmutableDict[_T, _S]) -> ImmutableDict[_T, _S]:
+        data: Dict[_T, _S] = {}
+        data.update(self._mapping_proxy)
+        data.update(other)
+        return self.__class__(data)
 
 
 def smart_bool(value: Any) -> bool:
