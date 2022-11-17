@@ -434,6 +434,7 @@ def create_remote_webdriver(
 ) -> WebDriver:
     wd_url = wd_url_data.to_url()
     caps = capabilities.to_dict()
+    logger.debug("Dumping caps data", caps=caps)
     wd_safe_url = wd_url_data.to_safe_url()
     logger.debug("Using webdriver URL", wd_url=wd_safe_url)
     driver = WebDriver(
