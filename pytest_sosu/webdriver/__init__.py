@@ -17,9 +17,9 @@ from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import (
     ImmutableDict,
     convert_snake_case_to_camel_case,
-    str_or_none,
     try_one_of_or_none,
 )
+from pytest_sosu.webdriver.platforms import Browser, Platform
 from pytest_sosu.webdriver.url import WebDriverUrlData
 
 logger = get_struct_logger(__name__)
@@ -31,80 +31,6 @@ class SauceTestResultsVisibility(enum.Enum):
     SHARE = "share"
     TEAM = "team"
     PRIVATE = "private"
-
-
-@dataclass(frozen=True)
-class BaseBrowser:
-    name: str
-    version: str = "latest"
-
-
-@dataclass(frozen=True)
-class Browser(BaseBrowser):
-    @classmethod
-    def default(cls) -> Optional[Browser]:
-        return cls(name="chrome")
-
-    def __init__(self, name: str, version: Union[str, int] = "latest") -> None:
-        super().__init__(name=name, version=str(version))
-
-    @property
-    def full_name(self) -> str:
-        return f"{self.name} {self.version}"
-
-    @property
-    def slug(self) -> str:
-        return f"{self.name}-{self.version}"
-
-    def __str__(self) -> str:
-        return self.full_name
-
-    def __structlog__(self) -> Dict[str, Any]:
-        return self.to_dict()
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclass(frozen=True)
-class BasePlatform:
-    name: str
-    version: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class Platform(BasePlatform):
-    @classmethod
-    def default(cls) -> Optional[Platform]:
-        return None
-
-    @classmethod
-    def windows_default(cls) -> Optional[Platform]:
-        return cls(name="Windows")
-
-    def __init__(self, name: str, version: Optional[Union[str, int]] = None) -> None:
-        super().__init__(name=name, version=str_or_none(version))
-
-    @property
-    def full_name(self) -> str:
-        if self.version is None:
-            return f"{self.name}"
-        return f"{self.name} {self.version}"
-
-    @property
-    def slug(self) -> str:
-        if self.version is None:
-            return f"{self.name}"
-        return f"{self.name}-{self.version}"
-
-    def __str__(self) -> str:
-        return self.full_name
-
-    def __structlog__(self) -> Dict[str, Any]:
-        return self.to_dict()
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dataclasses.asdict(self)
 
 
 @dataclass(frozen=True)
