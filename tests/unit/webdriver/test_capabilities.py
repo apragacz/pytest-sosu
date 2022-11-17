@@ -45,8 +45,7 @@ def test_to_dict_with_auto_include_selenium_version_disabled():
 
 def test_to_dict_with_w3c_mode_off_and_auto_include_selenium_version_disabled():
     caps = Capabilities(
-        sauce_options=SauceOptions(auto_include_selenium_version=False),
-        w3c_mode=False
+        sauce_options=SauceOptions(auto_include_selenium_version=False), w3c_mode=False
     )
     caps_data = caps.to_dict()
     assert set(caps_data) == {"browserName", "version"}
