@@ -94,7 +94,7 @@ class SauceOptions:
         auto_include_selenium_version = try_one_of(
             auto_include_selenium_version,
             lambda: self.auto_include_selenium_version,
-            default=True,
+            default=False,
         )
 
         data = {}

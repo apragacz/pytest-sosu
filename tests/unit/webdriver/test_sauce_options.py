@@ -40,10 +40,25 @@ def test_merge(opts1: SauceOptions, opts2: SauceOptions, expected_result: SauceO
 
 
 @pytest.mark.parametrize(
-    "opts,expected_result",
+    "opts,"
+    "expected_result",
     [
         pytest.param(
             SauceOptions(name="test name"),
+            {
+                "name": "test name",
+            },
+            id="name",
+        ),
+        pytest.param(
+            SauceOptions(record_video=False),
+            {
+                "recordVideo": False,
+            },
+            id="record video",
+        ),
+        pytest.param(
+            SauceOptions(name="test name", auto_include_selenium_version=True),
             {
                 "name": "test name",
                 "seleniumVersion": selenium.__version__,
@@ -51,7 +66,7 @@ def test_merge(opts1: SauceOptions, opts2: SauceOptions, expected_result: SauceO
             id="name",
         ),
         pytest.param(
-            SauceOptions(record_video=False),
+            SauceOptions(record_video=False, auto_include_selenium_version=True),
             {
                 "recordVideo": False,
                 "seleniumVersion": selenium.__version__,
