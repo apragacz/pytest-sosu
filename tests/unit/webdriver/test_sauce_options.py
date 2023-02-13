@@ -40,8 +40,7 @@ def test_merge(opts1: SauceOptions, opts2: SauceOptions, expected_result: SauceO
 
 
 @pytest.mark.parametrize(
-    "opts,"
-    "expected_result",
+    "opts,expected_result",
     [
         pytest.param(
             SauceOptions(name="test name"),

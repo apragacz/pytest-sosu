@@ -4,8 +4,7 @@ from pytest_sosu.utils import smart_bool, smart_bool_or_none
 
 
 @pytest.mark.parametrize(
-    "value,"
-    "output",
+    "value,output",
     (
         (True, True),
         (False, False),
@@ -26,8 +25,7 @@ def test_smart_bool_or_none(value, output):
 
 
 @pytest.mark.parametrize(
-    "value,"
-    "output",
+    "value,output",
     (
         (True, True),
         (False, False),

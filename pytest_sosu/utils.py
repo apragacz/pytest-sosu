@@ -54,16 +54,14 @@ def smart_bool_or_none(value: Any) -> Optional[bool]:
     if isinstance(value, Number):
         if value == 1:
             return True
-        elif value == 0:
+        if value == 0:
             return False
-        return None
     if isinstance(value, str):
         value_lower = value.lower()
         if value_lower in TRUTHY_VALUES:
             return True
-        elif value_lower in FALSY_VALUES:
+        if value_lower in FALSY_VALUES:
             return False
-        return None
     return None
 
 
