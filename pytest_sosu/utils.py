@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from numbers import Number
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Iterator, Mapping, Optional, TypeVar, Union
 
@@ -43,10 +44,31 @@ class ImmutableDict(Mapping[_T, _S]):
         return self.__class__(data)
 
 
-def smart_bool(value: Any) -> bool:
+TRUTHY_VALUES = {"true", "t", "yes", "y", "1"}
+FALSY_VALUES = {"false", "f", "no", "n", "0"}
+
+
+def smart_bool_or_none(value: Any) -> Optional[bool]:
     if isinstance(value, bool):
         return value
-    return str(value).lower() in {"true", "t", "yes", "y", "1"}
+    if isinstance(value, Number):
+        if value == 1:
+            return True
+        elif value == 0:
+            return False
+        return None
+    if isinstance(value, str):
+        value_lower = value.lower()
+        if value_lower in TRUTHY_VALUES:
+            return True
+        elif value_lower in FALSY_VALUES:
+            return False
+        return None
+    return None
+
+
+def smart_bool(value: Any, default: bool = False) -> bool:
+    return smart_bool_or_none(value) or default
 
 
 def convert_or_none(value: Any, converter_func: Callable[[Any], _T]) -> Optional[_T]:
