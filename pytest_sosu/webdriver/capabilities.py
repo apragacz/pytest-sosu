@@ -90,14 +90,13 @@ class SauceOptions:
     def to_dict(
         self, auto_include_selenium_version: Optional[bool] = None
     ) -> Dict[str, Union[str, int, float]]:
-
         auto_include_selenium_version = try_one_of(
             auto_include_selenium_version,
             lambda: self.auto_include_selenium_version,
             default=False,
         )
 
-        data = {}
+        data: Dict[str, Any] = {}
         if auto_include_selenium_version:
             data["seleniumVersion"] = selenium.__version__
         for field in dataclasses.fields(self):
