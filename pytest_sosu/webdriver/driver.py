@@ -4,6 +4,7 @@ import contextlib
 from typing import Optional
 
 from selenium.webdriver import Remote as WebDriver  # type: ignore
+from selenium.webdriver.common.by import By  # noqa: F401 type: ignore
 
 from pytest_sosu.exceptions import WebDriverTestFailed, WebDriverTestInterrupted
 from pytest_sosu.logging import get_struct_logger
