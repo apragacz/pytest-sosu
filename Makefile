@@ -23,7 +23,7 @@ BLACK_ARGS := ${PACKAGE_DIR} ${TESTS_DIR} ${ARGS}
 MYPY := mypy
 MYPY_OPTS :=
 PYLINT := pylint
-PYLINT_OPTS := --rcfile=setup.cfg
+PYLINT_OPTS := --rcfile=pyproject.toml
 PYTEST := pytest
 PYTEST_MODULE := pytest
 PYTEST_OPTS := --failed-first --maxfail 5 --durations=10 -v
@@ -116,12 +116,19 @@ black:  ## run black
 	${BLACK} ${BLACK_OPTS} ${BLACK_ARGS}
 
 .PHONY: bump_version_patch
-bump_version_patch:  ## bump package version by the patch part
-	bump2version patch
+bump_version_patch: bump_version_check  ## bump package version by the patch part
+	git add CHANGELOG.md
+	bump2version patch --allow-dirty
 
 .PHONY: bump_version_minor
-bump_version_minor:  ## bump package version by the minor part
-	bump2version minor
+bump_version_minor: bump_version_check  ## bump package version by the minor part
+	git add CHANGELOG.md
+	bump2version minor --allow-dirty
+
+.PHONY: bump_version_check
+bump_version_check:
+	git diff --name-status
+	git diff-files --name-only | grep -q CHANGELOG.md
 
 .PHONY: build
 build: build_package  ## alias for build_package
@@ -129,8 +136,7 @@ build: build_package  ## alias for build_package
 .PHONY: build_package
 build_package:  ## build package (source + wheel)
 	-${RM} -r ${DIST_DIR}
-	${PYTHON} setup.py sdist
-	${PYTHON} setup.py bdist_wheel
+	${PYTHON} -m build
 
 .PHONY: clean
 clean:  ## remove generated files

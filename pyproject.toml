@@ -1,0 +1,151 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "pytest-sosu"
+authors = [
+  {name = "Andrzej Pragacz", email = "apragacz@o2.pl"},
+]
+description = "Unofficial PyTest plugin for Sauce Labs"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+dependencies = [
+    "pytest",
+	"selenium",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Customer Service",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Testing",
+]
+keywords = [
+	"pytest",
+	"selenium",
+	"webdriver",
+	"saucelabs",
+	"sauce",
+	"sosu",
+]
+
+[project.urls]
+homepage = "https://github.com/apragacz/pytest-sosu"
+"Bug Tracker" = "https://github.com/apragacz/pytest-sosu/issues"
+"Documentation" = "https://github.com/apragacz/pytest-sosu/blob/master/README.md"
+"Source Code" = "https://github.com/apragacz/pytest-sosu"
+
+[project.entry-points.pytest11]
+sosu = "pytest_sosu.plugin"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pytest_sosu._version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pytest_sosu*"]
+namespaces = false
+
+[tool.flake8]
+max-line-length = 88
+exclude = [
+    "build",
+    "dist",
+    "examples",
+    ".venv",
+    ".tox",
+]
+
+[tool.isort]
+line_length = 88
+profile = "black"
+skip = [
+    "build",
+    "dist",
+    "examples",
+    ".venv",
+    ".tox",
+]
+known_first_party = "pytest_sosu"
+multi_line_output = 3
+
+[tool.pylint.main]
+ignore = ["migrations", "examples", "build", ".venv", ".tox"]
+
+[tool.pylint.basic]
+const-rgx = "([a-z_][a-z0-9_]{3,30}|[A-Z_][A-Z0-9_]{3,30})"
+good-names = ["i", "j", "k", "db"]
+
+[tool.pylint.design]
+max-parents = 10
+max-args = 6
+min-public-methods = 0
+
+[tool.pylint."messages control"]
+disable = [
+	"missing-docstring",
+	"missing-function-docstring",
+	"unused-argument",
+	"unused-import",
+	"line-too-long",
+	"ungrouped-imports",
+	"fixme",
+	"consider-using-f-string",
+]
+
+[tool.pylint.reports]
+ignore-docstrings = true
+score = false
+
+[tools.pylint.similarities]
+min-similarity-lines = 5
+ignore-imports = true
+
+[tool.pylint.typecheck]
+generated-members = [
+	"objects",
+	"from_queryset",
+	"__setattr__",
+	"DoesNotExist",
+	"Meta",
+	"_meta",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = "--doctest-modules"
+testpaths = [
+	"tests",
+	"pytest_sosu",
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+	"pytest_sosu",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+	"pragma: no cover",
+	"def __repr__",
+	"raise AssertionError",
+	"raise NotImplementedError",
+	"if __name__ == .__main__.:",
+	"if TYPE_CHECKING:",
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"

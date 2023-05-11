@@ -3,9 +3,10 @@ flake8
 flake8-comprehensions
 flake8-debugger
 flake8-isort
+flake8-pyproject
 flake8-print
 flake8-tuple
-isort
+isort[pyproject]
 pylint
 
 # code formatting
@@ -23,6 +24,7 @@ pytest-cov
 codecov
 
 # package building
+build
 docutils
 Pygments>=2.2.0
 twine>=1.11.0

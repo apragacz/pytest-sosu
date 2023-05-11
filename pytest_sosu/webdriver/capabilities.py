@@ -29,6 +29,7 @@ class SauceTestResultsVisibility(enum.Enum):
     PRIVATE = "private"
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass(frozen=True)
 class SauceOptions:
     name: Optional[str] = None
