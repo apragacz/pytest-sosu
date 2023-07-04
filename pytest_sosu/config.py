@@ -59,7 +59,9 @@ def build_sosu_config(args: argparse.Namespace, env: os._Environ) -> SosuConfig:
 
 
 def get_host_by_region(region: Optional[str]) -> str:
-    if not region or region == "global":
+    if not region:
+        region = "us"
+    if region in ["global", "legacy"]:
         return "ondemand.saucelabs.com"
     host_region = REGION_MAP.get(region, region)
     return f"ondemand.{host_region}.saucelabs.com"
