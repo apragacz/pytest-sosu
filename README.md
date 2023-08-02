@@ -45,7 +45,7 @@ def sosu_build_basename():
     return 'my-project-name'
 
 
-# alias for sosu_webdriver
+# alias for sosu_selenium_webdriver
 @pytest.fixture
 def driver(sosu_selenium_webdriver):
     yield sosu_selenium_webdriver
