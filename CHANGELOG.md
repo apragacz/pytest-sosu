@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 0.3
+
+### v0.3.0
+
+*   Move selenium webdriver to pytest_sosu.webdriver.selenium
+*   Rename sosu_webdriver to sosu_selenium_webdriver
 
 ## Version 0.2
 
