@@ -5,10 +5,6 @@ import enum
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
-import selenium  # type: ignore
-import selenium.webdriver  # type: ignore
-import selenium.webdriver.common.by  # type: ignore
-
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.utils import (
     ImmutableDict,
@@ -16,6 +12,7 @@ from pytest_sosu.utils import (
     try_one_of,
     try_one_of_or_none,
 )
+from pytest_sosu.webdriver.compat import selenium_version
 from pytest_sosu.webdriver.platforms import Browser, Platform
 
 logger = get_struct_logger(__name__)
@@ -98,8 +95,8 @@ class SauceOptions:
         )
 
         data: Dict[str, Any] = {}
-        if auto_include_selenium_version:
-            data["seleniumVersion"] = selenium.__version__
+        if auto_include_selenium_version and selenium_version:
+            data["seleniumVersion"] = selenium_version
         for field in dataclasses.fields(self):
             name = field.name
             if name in self.TO_DICT_AUTO_EXCLUDES:
