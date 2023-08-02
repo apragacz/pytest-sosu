@@ -5,6 +5,7 @@ from typing import Optional
 
 from selenium.webdriver import Remote as WebDriver  # type: ignore
 from selenium.webdriver.common.by import By  # noqa: F401 type: ignore
+from selenium.webdriver.common.options import ArgOptions  # type: ignore
 
 from pytest_sosu.exceptions import WebDriverTestFailed, WebDriverTestInterrupted
 from pytest_sosu.logging import get_struct_logger
@@ -76,9 +77,11 @@ def create_remote_webdriver(
     logger.debug("Dumping caps data", caps=caps)
     wd_safe_url = wd_url_data.to_safe_url()
     logger.debug("Using webdriver URL", wd_url=wd_safe_url)
+    options = ArgOptions()
+    options._caps.update(caps)  # pylint: disable=protected-access
     driver = WebDriver(
         command_executor=wd_url,
-        desired_capabilities=caps,
+        options=options,
     )
     if setup_timeouts:
         timeout = capabilities.sauce_options.command_timeout

@@ -16,8 +16,8 @@ Assuming you have `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables 
 you can write a simple test:
 
 ```python
-def test_visit(sosu_webdriver):
-    driver = sosu_webdriver
+def test_visit(sosu_selenium_webdriver):
+    driver = sosu_selenium_webdriver
     driver.get("http://example.com/")
     assert driver.title == "Example Domain"
 ```
@@ -47,6 +47,6 @@ def sosu_build_basename():
 
 # alias for sosu_webdriver
 @pytest.fixture
-def driver(sosu_webdriver):
-    yield sosu_webdriver
+def driver(sosu_selenium_webdriver):
+    yield sosu_selenium_webdriver
 ```

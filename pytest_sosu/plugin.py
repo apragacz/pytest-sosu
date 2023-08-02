@@ -17,8 +17,8 @@ from pytest_sosu.webdriver import (
     WebDriverTestFailed,
     WebDriverTestInterrupted,
     WebDriverUrlData,
-    remote_webdriver_ctx,
 )
+from pytest_sosu.webdriver.selenium import remote_webdriver_ctx
 
 logger = get_struct_logger(__name__)
 
@@ -182,7 +182,7 @@ def sosu_webdriver_combined_capabilities(
 
 
 @pytest.fixture
-def sosu_webdriver(
+def sosu_selenium_webdriver(
     request,
     sosu_webdriver_url_data: WebDriverUrlData,
     sosu_webdriver_combined_capabilities: Capabilities,

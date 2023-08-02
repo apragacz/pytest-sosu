@@ -14,7 +14,7 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 dependencies = [
     "pytest",
-	"selenium",
+	"selenium>=4.11",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
