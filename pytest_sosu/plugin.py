@@ -8,7 +8,7 @@ from _pytest.config import Config
 
 from pytest_sosu.config import SosuConfig, build_sosu_config
 from pytest_sosu.logging import get_struct_logger
-from pytest_sosu.plugin_helpers import parametrize_capabilities
+from pytest_sosu.plugin_helpers import get_sosu_build_name, parametrize_capabilities
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
@@ -49,6 +49,24 @@ def pytest_addoption(parser):
         action="store",
         metavar="SAUCE_WEBDRIVER_URL",
         help="Sauce Labs WebDriver URL",
+    )
+    group.addoption(
+        "--sosu-build-basename",
+        action="store",
+        metavar="SAUCE_BUILD_BASENAME",
+        help="Sauce Labs build basename",
+    )
+    group.addoption(
+        "--sosu-build-version",
+        action="store",
+        metavar="SAUCE_BUILD_VERSION",
+        help="Sauce Labs build version",
+    )
+    group.addoption(
+        "--sosu-build-format",
+        action="store",
+        metavar="SAUCE_BUILD_FORMAT",
+        help="Sauce Labs build format",
     )
 
 
@@ -94,8 +112,9 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture(scope="session")
-def sosu_build_basename() -> Optional[str]:
-    return None
+def sosu_build_basename(pytestconfig: Config) -> Optional[str]:
+    sosu_config = _get_sosu_config(pytestconfig)
+    return sosu_config.region
 
 
 @pytest.fixture(scope="session")
@@ -107,17 +126,30 @@ def sosu_build_time_tag() -> str:
 
 
 @pytest.fixture(scope="session")
-def sosu_build_version(sosu_build_time_tag: str) -> str:
+def sosu_build_format(pytestconfig: Config) -> str:
+    sosu_config = _get_sosu_config(pytestconfig)
+    return sosu_config.build_format
+
+
+@pytest.fixture(scope="session")
+def sosu_build_version(pytestconfig: Config, sosu_build_time_tag: str) -> str:
+    sosu_config = _get_sosu_config(pytestconfig)
+    if sosu_config.build_version:
+        return sosu_config.build_version
     return sosu_build_time_tag
 
 
 @pytest.fixture(scope="session")
 def sosu_build_name(
-    sosu_build_basename: Optional[str], sosu_build_version: str
+    sosu_build_basename: Optional[str],
+    sosu_build_version: str,
+    sosu_build_format: str,
 ) -> Optional[str]:
-    if sosu_build_basename is None:
-        return None
-    return f"{sosu_build_basename}_{sosu_build_version}"
+    return get_sosu_build_name(
+        sosu_build_basename,
+        sosu_build_version,
+        sosu_build_format,
+    )
 
 
 @pytest.fixture

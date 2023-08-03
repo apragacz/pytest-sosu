@@ -8,6 +8,8 @@ from _pytest.config import UsageError
 from pytest_sosu.logging import get_struct_logger
 from pytest_sosu.webdriver import WebDriverUrlData
 
+DEFAULT_SAUCE_BUILD_FORMAT = "${build_basename}_${build_version}"
+
 logger = get_struct_logger(__name__)
 
 
@@ -17,6 +19,9 @@ class SosuConfig:
     access_key: str
     region: Optional[str]
     webdriver_url_data: WebDriverUrlData
+    build_basename: Optional[str]
+    build_version: Optional[str]
+    build_format: str
 
     @property
     def webdriver_url_data_with_credentials(self) -> WebDriverUrlData:
@@ -31,6 +36,13 @@ def build_sosu_config(args: argparse.Namespace, env: os._Environ) -> SosuConfig:
     logger.debug("build_sosu_config", args=args, env=env)
     username = args.sosu_username or env.get("SAUCE_USERNAME")
     access_key = args.sosu_access_key or env.get("SAUCE_ACCESS_KEY")
+    build_basename = args.sosu_build_basename or env.get("SAUCE_BUILD_BASENAME")
+    build_version = args.sosu_build_version or env.get("SAUCE_BUILD_VERSION")
+    build_format = (
+        args.sosu_build_format
+        or env.get("SAUCE_BUILD_FORMAT")
+        or DEFAULT_SAUCE_BUILD_FORMAT
+    )
 
     if not username:
         raise UsageError("--sosu-username or SAUCE_USERNAME are not provided")
@@ -55,6 +67,9 @@ def build_sosu_config(args: argparse.Namespace, env: os._Environ) -> SosuConfig:
         access_key=access_key,
         region=region,
         webdriver_url_data=webdriver_url_data,
+        build_basename=build_basename,
+        build_version=build_version,
+        build_format=build_format,
     )
 
 
