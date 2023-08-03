@@ -70,6 +70,4 @@ def get_host_by_region(region: Optional[str]) -> str:
 REGION_MAP = {
     "us": "us-west-1",
     "eu": "eu-central-1",
-    "apac": "apac-southeast-1",
-    "headless": "us-east-1",
 }
