@@ -2,6 +2,10 @@
 
 ## Version 0.3
 
+### v0.3.1
+
+*   Add support for configuring sauce build
+
 ### v0.3.0
 
 *   Move selenium webdriver to pytest_sosu.webdriver.selenium
