@@ -13,12 +13,14 @@ DEFAULT_SAUCE_BUILD_FORMAT = "${build_basename}_${build_version}"
 logger = get_struct_logger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class SosuConfig:
     username: str
     access_key: str
     region: Optional[str]
     webdriver_url_data: WebDriverUrlData
+    build_name: Optional[str]
     build_basename: Optional[str]
     build_version: Optional[str]
     build_format: str
@@ -36,6 +38,7 @@ def build_sosu_config(args: argparse.Namespace, env: os._Environ) -> SosuConfig:
     logger.debug("build_sosu_config", args=args, env=env)
     username = args.sosu_username or env.get("SAUCE_USERNAME")
     access_key = args.sosu_access_key or env.get("SAUCE_ACCESS_KEY")
+    build_name = args.sosu_build_name or env.get("SAUCE_BUILD_NAME")
     build_basename = args.sosu_build_basename or env.get("SAUCE_BUILD_BASENAME")
     build_version = args.sosu_build_version or env.get("SAUCE_BUILD_VERSION")
     build_format = (
@@ -67,6 +70,7 @@ def build_sosu_config(args: argparse.Namespace, env: os._Environ) -> SosuConfig:
         access_key=access_key,
         region=region,
         webdriver_url_data=webdriver_url_data,
+        build_name=build_name,
         build_basename=build_basename,
         build_version=build_version,
         build_format=build_format,

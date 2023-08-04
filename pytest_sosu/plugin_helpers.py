@@ -83,7 +83,7 @@ def get_marker_unique_parameter_or_none(sosu_markers: List[Mark], key: str) -> A
     return values[0]
 
 
-def get_sosu_build_name(
+def build_sosu_build_name(
     sosu_build_basename: Optional[str],
     sosu_build_version: str,
     sosu_build_format: str,

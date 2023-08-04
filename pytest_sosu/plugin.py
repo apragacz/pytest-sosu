@@ -8,7 +8,7 @@ from _pytest.config import Config
 
 from pytest_sosu.config import SosuConfig, build_sosu_config
 from pytest_sosu.logging import get_struct_logger
-from pytest_sosu.plugin_helpers import get_sosu_build_name, parametrize_capabilities
+from pytest_sosu.plugin_helpers import build_sosu_build_name, parametrize_capabilities
 from pytest_sosu.webdriver import (
     Browser,
     Capabilities,
@@ -67,6 +67,12 @@ def pytest_addoption(parser):
         action="store",
         metavar="SAUCE_BUILD_FORMAT",
         help="Sauce Labs build format",
+    )
+    group.addoption(
+        "--sosu-build-name",
+        action="store",
+        metavar="SAUCE_BUILD_NAME",
+        help="Sauce Labs build name",
     )
 
 
@@ -141,11 +147,15 @@ def sosu_build_version(pytestconfig: Config, sosu_build_time_tag: str) -> str:
 
 @pytest.fixture(scope="session")
 def sosu_build_name(
+    pytestconfig: Config,
     sosu_build_basename: Optional[str],
     sosu_build_version: str,
     sosu_build_format: str,
 ) -> Optional[str]:
-    return get_sosu_build_name(
+    sosu_config = _get_sosu_config(pytestconfig)
+    if sosu_config.build_name:
+        return sosu_config.build_name
+    return build_sosu_build_name(
         sosu_build_basename,
         sosu_build_version,
         sosu_build_format,
